@@ -1,8 +1,10 @@
+import {useContext} from "react";
+
+import AppContext from "../context";
 import Card from "../components/Card";
 
 import search from "../img/search.png";
 import btn_rem from "../img/btn_rem.svg";
-
 
 const Home = (
     {
@@ -12,11 +14,9 @@ const Home = (
         onChangeSearchValue,
         onAddToFavorites,
         onAddToCart,
-        cartItems,
         isLoading
     }) => {
 
-    console.log(cartItems)
         const renderItems = () => {
             const filtredItems = items.filter((item) => item.name.toLowerCase().includes(searchValue))
             return (isLoading ?
@@ -26,13 +26,12 @@ const Home = (
                             key={index}
                             onFavorite={(obj) => onAddToFavorites(obj)}
                             onPlus={(obj) => onAddToCart(obj)}
-                            added={cartItems.some(obj => Number(obj.id) === Number(item.id))}
                             loading={isLoading}
                             {...item}
                         />
                     ))
-            )
-        }
+                )
+            }
 
     return (
         <div className="content p-40">

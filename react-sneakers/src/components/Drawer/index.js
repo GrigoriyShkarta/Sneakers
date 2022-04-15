@@ -1,72 +1,106 @@
+import {useState} from "react";
+
+import axios from "axios";
+
+import Info from "../Info";
+import {useCart} from "../../hooks/useCart";
+
 import btn_rem from "../../img/btn_rem.svg";
 import arrow from "../../img/arrow.svg";
-import arrow_back from "../../img/arrow_back.svg"
-import empty_cart from "../../img/empty_box.png"
 
 import styles from "./Drawer.module.scss"
 
-const Index = ({onClose, items = [], onRemove} ) => {
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const Drawer = ({onClose, items = [], onRemove, opened} ) => {
+    const {cartItems, setCartItems, totalPrice} = useCart();
+    const [orderId, setOrderId] = useState(null);
+    const [isOrderComplete, setIsOrderComplete] = useState(false);
+    const [isLoading, setIsOLoading] = useState(false);
+
+
+    const onClickOrder = async () => {
+        try {
+            setIsOLoading(true);
+            const {data} = await axios.post('https://62503bf8e3e5d24b341e3818.mockapi.io/orders', {items: cartItems})
+
+            setOrderId(data.id)
+            setIsOrderComplete(true);
+            setCartItems([]);
+
+            for (let i = 0; i < cartItems.length; i++) {
+                const item = cartItems[i];
+                await axios.delete('https://62503bf8e3e5d24b341e3818.mockapi.io/cart/' + item.id);
+                await delay(1000);
+            }
+
+        } catch (error) {
+            alert('Ошибка при создании заказа :(')
+        }
+        setIsOLoading(false)
+    };
+
     return (
-        <div className={styles.overlay}>
-            <div className={`${styles.drawer} d-flex flex-column`}>
-                <h2
-                    className="d-flex justify-between mb-30">
-                    Корзина
-                    <img
-                        className={`${styles.removeBtn} cu-p`}
-                        src={btn_rem} alt="remove"
-                        onClick={onClose}
-                    />
+        <div className={`${styles.overlay} ${opened ? styles.overlayVisible : ''}`}>
+            <div className={styles.drawer}>
+                <h2 className="d-flex justify-between mb-30">
+                    Корзина <img onClick={onClose} className="cu-p" src={btn_rem} alt="Close" />
                 </h2>
 
-                {
-                   items.length > 0 ?
-                       <div>
-                           <div className={styles.items}>
-                               {items.map((obj) => (
-                                   <div key={obj.id} className={`${styles.cartItem} d-flex align-center mb-20`}>
-                                       <div className={styles.cartItemImg}>
-                                           <img className="mr-20" width={70} height={70} src={obj.img} alt="sneakers"/>
-                                       </div>
-                                       <div className="mr-20 flex">
-                                           <p className="mb-5">{obj.name}</p>
-                                           <b>{obj.price} грн</b>
-                                       </div>
-                                       <img onClick={() => onRemove(obj.id)} className="removeBtn cu-p" src={btn_rem} alt="remove"/>
-                                   </div>
-                               ))}
-                           </div>
-                           <div className={styles.cartTotalBlock}>
-                               <ul>
-                                   <li>
-                                       <span>Итого:</span>
-                                       <div></div>
-                                       <b>10 254 грн</b>
-                                   </li>
-                                   <li>
-                                       <span>Налог 5%:</span>
-                                       <div></div>
-                                       <b>300 грн</b>
-                                   </li>
-                               </ul>
-                               <button className="greenButton">Оформить заказ <img src={arrow} alt="arrow"/></button>
-                           </div>
-                       </div>
-                       :
-                       <div className={`${styles.cartEmpty} d-flex align-center justify-center flex flex-column`}>
-                           <img className="mb-20" src={empty_cart} alt="empty box" width={120} height={120}/>
-                           <h2>Корзина пустая</h2>
-                           <p className="opacity-6">Добавьте хотя бы одну пару кроссовок, чтобы сделать заказ.</p>
-                           <button onClick={onClose} className="greenButton">
-                               <img src={arrow_back} alt="back"/>Вернуться назад
-                           </button>
-                       </div>
-                }
+                {items.length > 0 ? (
+                    <div className="d-flex flex-column flex">
+                        <div className="items flex">
+                            {items.map((obj) => (
+                                <div key={obj.id} className="cartItem d-flex align-center mb-20">
+                                    <div
+                                        style={{backgroundImage: `url(${obj.img})`}}
+                                        className="cartItemImg"></div>
 
-
+                                    <div className="mr-20 flex">
+                                        <p className="mb-5">{obj.title}</p>
+                                        <b>{obj.price} руб.</b>
+                                    </div>
+                                    <img
+                                        onClick={() => onRemove(obj.id)}
+                                        className="removeBtn"
+                                        src={btn_rem}
+                                        alt="Remove"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="cartTotalBlock">
+                            <ul>
+                                <li>
+                                    <span>Итого:</span>
+                                    <div></div>
+                                    <b>{totalPrice} грн </b>
+                                </li>
+                                <li>
+                                    <span>Налог 5%:</span>
+                                    <div></div>
+                                    <b>{+(totalPrice / 100 * 5).toFixed(2)} грн </b>
+                                </li>
+                            </ul>
+                            <button disabled={isLoading} onClick={onClickOrder} className="greenButton">
+                                Оформить заказ <img src={arrow} alt="Arrow" />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <Info
+                        title={isOrderComplete ? 'Заказ оформлен!' : 'Корзина пустая'}
+                        description={
+                            isOrderComplete
+                                ? `Ваш заказ #${orderId} скоро будет передан курьерской доставке`
+                                : 'Добавьте хотя бы одну пару кроссовок, чтобы сделать заказ.'
+                        }
+                        image={isOrderComplete ? '/img/complete-order.jpg' : '/img/empty-cart.jpg'}
+                    />
+                )}
             </div>
         </div>
     );
 };
 
-export default Index;
+export default Drawer;
