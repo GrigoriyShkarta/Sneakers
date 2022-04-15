@@ -1,19 +1,17 @@
+import React from 'react';
 import axios from 'axios';
-import {useState, useEffect} from "react";
 
 import Card from '../components/Card';
 
 
 function Orders() {
-  const _BaseAPI = 'https://62503bf8e3e5d24b341e3818.mockapi.io'
+  const [orders, setOrders] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const [orders, setOrders] = useState([])
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
+  React.useEffect(() => {
     (async () => {
       try {
-        const { data } = await axios.get(`${_BaseAPI}/orders`);
+        const { data } = await axios.get('https://62503bf8e3e5d24b341e3818.mockapi.io/orders');
         setOrders(data.reduce((prev, obj) => [...prev, ...obj.items], []));
         setIsLoading(false);
       } catch (error) {

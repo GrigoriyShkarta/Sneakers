@@ -1,10 +1,8 @@
+import React from 'react';
 import AppContext from '../context';
 
-import arrow_back from '../img/arrow_back.svg'
-import {useContext} from "react";
-
 const Info = ({ title, image, description }) => {
-  const { setCartOpened } = useContext(AppContext)
+  const { setCartOpened } = React.useContext(AppContext);
 
   return (
     <div className="cartEmpty d-flex align-center justify-center flex-column flex">
@@ -12,7 +10,7 @@ const Info = ({ title, image, description }) => {
       <h2>{title}</h2>
       <p className="opacity-6">{description}</p>
       <button onClick={() => setCartOpened(false)} className="greenButton">
-        <img src={arrow_back} alt="Arrow" />
+        <img src="img/arrow.svg" alt="Arrow" />
         Вернуться назад
       </button>
     </div>
